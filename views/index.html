@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online IDE</title>
+    
+    <!-- Include CodeMirror CSS and JS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.63.1/codemirror.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.63.1/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.63.1/mode/python/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.63.1/mode/clike/clike.min.js"></script>
+</head>
+<body>
+    <!-- Top navigation -->
+    <nav style="background-color: #333; color: #fff; padding: 10px; text-align: center;">
+        <a href="#" style="color: #fff; margin-right: 20px;">New Project</a>
+        <a href="login.html" style="color: #fff; margin-right: 20px;">Login</a>
+        <a href="signup.html" style="color: #fff;">Sign Up</a>
+    </nav>
+
+    <!-- Code editor using CodeMirror -->
+    <div style="padding: 20px;">
+        <nav style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h1>IDE</h1>
+            <div>
+                <a href="#" style="color: black;">Profile</a>
+            </div>
+        </nav>
+        <div>
+            <label for="language-select" style="display: block; margin-bottom: 10px;">Select Language:</label>
+            <select id="language-select" onchange="setLanguage(this.value)" style="width: 20%; padding: 5px; font-size: 14px; border-radius: 4px; border: 1px solid #ccc; background-color: #fff;">
+                <option value="python">Python</option>
+                <option value="c">C</option>
+                <option value="cpp">C++</option>
+            </select>
+
+            <!-- Code editor using CodeMirror -->
+            <div style="margin-top: 20px;">
+                <textarea id="code" rows="10" cols="50" placeholder="Enter your code here..." oninput="setCode(event.target.value)"></textarea>
+            </div>
+
+            <div style="display: flex; justify-content: space-between;">
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <button onclick="compileCode()" style="padding: 10px 20px; font-size: 16px; background-color: #007bff; color: #fff; border: none; border-radius: 4px; cursor: pointer;">Run code</button>
+                </div>
+                <div>
+                    <button onclick="saveCode()" style="padding: 10px 20px; font-size: 16px; background-color: #28a745; color: #fff; border: none; border-radius: 4px; cursor: pointer;">Save</button>
+                    <button onclick="saveAs()" style="padding: 10px 20px; font-size: 16px; background-color: #28a745; color: #fff; border: none; border-radius: 4px; cursor: pointer;">Save As</button>
+                </div>
+            </div>
+            <div>
+                <h2 style="text-align: center;">Output:</h2>
+                <pre id="output" style="background-color: #f5f5f5; padding: 12px; border-radius: 5px;"></pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- File upload input -->
+    <input type="file" id="fileInput" style="display: none;">
+
+    <script>
+        // Initialize CodeMirror for syntax highlighting and code editing
+        const codeEditor = CodeMirror.fromTextArea(document.getElementById('code'), {
+            lineNumbers: true,
+            theme: 'default'
+        });
+
+        function compileCode() {
+            const code = codeEditor.getValue();
+            const language = document.getElementById('language-select').value;
+
+            if (language === 'python') {
+                // Execute Python code directly
+                fetch('/compile', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ language, code })
+                })
+                .then(response => response.text())
+                .then(output => {
+                    document.getElementById('output').textContent = output;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            } else {
+                // Execute C/C++ code
+                fetch('/compile', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ language, code })
+                })
+                .then(response => response.text())
+                .then(output => {
+                    document.getElementById('output').textContent = output;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            }
+        }
+
+        function saveCode() {
+            const code = codeEditor.getValue();
+
+            // Create a Blob object containing the code
+            const blob = new Blob([code], { type: 'text/plain' });
+
+            // Create a link element and trigger a download
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'my_code.txt';
+            document.body.appendChild(link);
+            link.click();
+                                                                      
+            // Clean up by revoking the object URL
+            URL.revokeObjectURL(url);
+        }
+
+        function saveAs() {
+            const code = codeEditor.getValue();
+            const filename = prompt("Enter file name:", "my_code.txt");
+
+            if (filename !== null) {
+                // Create a Blob object containing the code
+                const blob = new Blob([code], { type: 'text/plain' });
+
+                // Create a link element and trigger a download
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = filename;
+                document.body.appendChild(link);
+                link.click();
+
+                // Clean up by revoking the object URL
+                URL.revokeObjectURL(url);
+            }
+        }
+    </script>
+</body>
+</html>
